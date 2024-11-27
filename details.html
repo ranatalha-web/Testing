@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Basic styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .listing-detail-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .listing-detail-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+        .listing-detail-info {
+            margin-top: 20px;
+        }
+        .listing-detail-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .listing-detail-price {
+            font-size: 22px;
+            color: #333;
+            margin-top: 10px;
+        }
+        .listing-detail-description {
+            margin-top: 10px;
+            color: #555;
+        }
+        .listing-detail-address {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .back-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <title>Listing Details</title>
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">Loading listing details...</div>
+        <div id="error-container" class="error" style="display:none; color: red;"></div>
+        <div id="listing-detail-card" class="listing-detail-card" style="display: none;">
+            <img id="listing-image" class="listing-detail-image" alt="Listing Image">
+            <div class="listing-detail-info">
+                <div id="listing-title" class="listing-detail-title"></div>
+                <div id="listing-price" class="listing-detail-price"></div>
+                <div id="listing-description" class="listing-detail-description"></div>
+                <div id="listing-address" class="listing-detail-address"></div>
+            </div>
+            <a href="index.html" class="back-btn">Back to Listings</a>
+        </div>
+    </div>
+
+    <script>
+        async function fetchListingDetails() {
+            const errorContainer = document.getElementById('error-container');
+            const loading = document.getElementById('loading');
+            const listingDetailCard = document.getElementById('listing-detail-card');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const listingId = urlParams.get('id'); // Get the listing ID from the query string
+
+            if (!listingId) {
+                errorContainer.textContent = 'Listing ID not provided in the URL';
+                errorContainer.style.display = 'block';
+                loading.style.display = 'none';
+                return;
+            }
+
+            try {
+                loading.style.display = 'block'; // Show loading message
+                const response = await fetch(`/api/listings/${listingId}`); // Fetch details by ID
+                if (!response.ok) throw new Error('Listing not found');
+
+                const listing = await response.json();
+                renderListingDetails(listing);
+
+                loading.style.display = 'none'; // Hide loading message
+                listingDetailCard.style.display = 'block'; // Show listing details card
+            } catch (error) {
+                console.error('Error fetching listing details:', error);
+                errorContainer.textContent = `Failed to load listing details: ${error.message}`;
+                errorContainer.style.display = 'block';
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderListingDetails(listing) {
+            // Set the image, title, price, description, and address
+            document.getElementById('listing-title').textContent = listing.name;
+            document.getElementById('listing-price').textContent = listing.price;
+            document.getElementById('listing-description').textContent = listing.description;
+            document.getElementById('listing-address').textContent = listing.address || 'Address not provided';
+
+            // Set the listing image
+            const imageElement = document.getElementById('listing-image');
+            if (listing.imageUrl && listing.imageUrl !== 'Image Not Available') {
+                imageElement.src = listing.imageUrl;
+                imageElement.alt = listing.name;
+            } else {
+                imageElement.src = 'https://via.placeholder.com/400?text=Image+Not+Available';
+                imageElement.alt = 'Image Not Available';
+            }
+        }
+
+        // Fetch listing details when the page loads
+        window.onload = fetchListingDetails;
+    </script>
+</body>
+</html>
